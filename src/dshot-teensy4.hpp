@@ -53,6 +53,7 @@ class DshotTeensy4 {
         {
             for (auto pin : pins) {
                 _pins.push_back(pin);
+                _frames.push_back(0);
                 pinMode(pin, OUTPUT);
             }
          }
@@ -90,10 +91,9 @@ class DshotTeensy4 {
              */
 
             // Prepare DShot frames for all motors.
-            uint16_t m1_frame = calc_dshot_frame(pwms[0], armedFly);
-            uint16_t m2_frame = calc_dshot_frame(pwms[1], armedFly);
-            uint16_t m3_frame = calc_dshot_frame(pwms[2], armedFly);
-            uint16_t m4_frame = calc_dshot_frame(pwms[3], armedFly);
+            for (uint8_t k=0; k<_pins.size(); ++k) {
+                _frames[k] = calc_dshot_frame(pwms[k], armedFly);
+            }
 
             noInterrupts();
 
@@ -105,10 +105,9 @@ class DshotTeensy4 {
             for (int i = 15; i >= 0; --i) {
 
                 // start high pulses
-                pin_up(_pins[0]);
-                pin_up(_pins[1]);
-                pin_up(_pins[2]);
-                pin_up(_pins[3]);
+                for (auto pin : _pins) {
+                    pin_up(pin);
+                }
 
                 // adjust the duration of the 0 high pulse ( short pulse ) to
                 // exclude the time it took to set pins high if included, under
@@ -121,10 +120,10 @@ class DshotTeensy4 {
                 uint32_t timeoutbit = bit_start_cycle + stepsforbit; // start + 1002
 
                 // is 'i'th bit 0 or 1
-                uint16_t m1_is1 = ((m1_frame >> i) & 1);
-                uint16_t m2_is1 = ((m2_frame >> i) & 1);
-                uint16_t m3_is1 = ((m3_frame >> i) & 1);
-                uint16_t m4_is1 = ((m4_frame >> i) & 1);
+                uint16_t m1_is1 = ((_frames[0] >> i) & 1);
+                uint16_t m2_is1 = ((_frames[1] >> i) & 1);
+                uint16_t m3_is1 = ((_frames[2] >> i) & 1);
+                uint16_t m4_is1 = ((_frames[3] >> i) & 1);
 
                 // busy wait until the 0 high pulses are complete
                 while (ARM_DWT_CYCCNT < (timeout0high - offset)) {;} 
@@ -157,6 +156,8 @@ class DshotTeensy4 {
     private:
 
         std::vector<uint8_t> _pins;
+
+        std::vector<uint16_t> _frames;
 
         static float clamp(float val, float minv, float maxv) 
         {
