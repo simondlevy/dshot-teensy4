@@ -197,10 +197,10 @@ class DshotTeensy4 {
             const uint16_t throttle = !armed ? 0 :
                 round(map_range(
                             in,
-                            ONESHOT_MIN_THROTTLE,
-                            ONESHOT_MAX_THROTTLE,
-                            DSHOT_MIN_THROTTLE + idle,
-                            DSHOT_MAX_THROTTLE));
+                            0,
+                            1,
+                            48 + idle,
+                            2047));
 
             const uint16_t frame = (throttle << 1) | 0; // [11 bits throttle][1 bit telemetry]
 
