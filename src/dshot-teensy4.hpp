@@ -34,11 +34,7 @@
  * Can be configured at DSHOT 300, 600 speeds
  * Defaults to DSHOT300 - sufficient for the default 2k loop speed
  * Tunable:
- * - DSHOT_IDLE_THROTTLE: Idle throttle. Needs to be high enough to avoid
- *   desyncs, low enough to avoid liftoff. Somewhere between 50 and 400
- * - offset: adjustment to DSHOT short pulse in case ESC rejects frames.
  */
-#define DSHOT_IDLE_THROTTLE 100 // <<<<---
 
 // fast pin access
 #define pin_up(pin) (*portSetRegister(pin) = digitalPinToBitMask(pin))
@@ -49,7 +45,16 @@ class DshotTeensy4 {
 
     public:
 
-        DshotTeensy4(const std::vector<uint8_t> pins)
+        /*
+         * idle_throttle needs to be high enough to avoid desyncs, low enough
+         * to avoid liftoff. Somewhere between 50 and 400 - offset: adjustment
+         * to DSHOT short pulse in case ESC rejects frames.
+         */
+
+        DshotTeensy4(
+                const std::vector<uint8_t> pins,
+                const uint16_t idle_throttle=100
+                )
         {
             for (auto pin : pins) {
                 _pins.push_back(pin);
@@ -57,7 +62,9 @@ class DshotTeensy4 {
                 _is1s.push_back(0);
                 pinMode(pin, OUTPUT);
             }
-         }
+
+            _idle_throttle = idle_throttle;
+        }
 
         void run(const bool armedFly, const float * pwms)
         {
@@ -85,7 +92,7 @@ class DshotTeensy4 {
             uint32_t stepsfor1high = (cpuHz * 1.25f) / 1'000'000;
             uint32_t stepsforbit = (cpuHz * 1.67) / 1'000'000;
             //uint32_t offset = 40; // tuned adjustment for minimizing out-of-frame errors
-                                  // depending on ESC, range is somewhere between 20 and 80
+            // depending on ESC, range is somewhere between 20 and 80
 
             /*
              * relies on teensy4.0 ARM_DWT_CYCCNT CPU cycle counter. 1 cycle ≈ 1.67 nanoseconds
@@ -159,6 +166,8 @@ class DshotTeensy4 {
 
         std::vector<uint16_t> _is1s;
 
+        uint16_t _idle_throttle;
+
         static float clamp(float val, float minv, float maxv) 
         {
             if (val < minv) return minv;
@@ -173,7 +182,7 @@ class DshotTeensy4 {
                     (out_max - out_min)) / (in_max - in_min);
         }
 
-        static uint16_t calc_dshot_frame(float in, const bool armedFly)
+        uint16_t calc_dshot_frame(float in, const bool armedFly)
         {
 
             uint16_t throttle = 0;
@@ -187,7 +196,7 @@ class DshotTeensy4 {
                             in,
                             ONESHOT_MIN_THROTTLE,
                             ONESHOT_MAX_THROTTLE,
-                            DSHOT_MIN_THROTTLE+DSHOT_IDLE_THROTTLE,
+                            DSHOT_MIN_THROTTLE + _idle_throttle,
                             DSHOT_MAX_THROTTLE));
             }
 
