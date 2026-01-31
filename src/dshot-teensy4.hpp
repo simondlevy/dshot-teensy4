@@ -56,13 +56,7 @@ class DshotTeensy4 {
             }
          }
 
-        void run(
-                const bool armedFly,
-                const int m1_command_PWM,
-                const int m2_command_PWM,
-                const int m3_command_PWM,
-                const int m4_command_PWM
-                 )
+        void run(const bool armedFly, const float * pwms)
         {
             static bool cycle_ctr_enabled = false;
 
@@ -95,10 +89,10 @@ class DshotTeensy4 {
              */
 
             // Prepare DShot frames for all motors.
-            uint16_t m1_frame = calc_dshot_frame(m1_command_PWM, armedFly);
-            uint16_t m2_frame = calc_dshot_frame(m2_command_PWM, armedFly);
-            uint16_t m3_frame = calc_dshot_frame(m3_command_PWM, armedFly);
-            uint16_t m4_frame = calc_dshot_frame(m4_command_PWM, armedFly);
+            uint16_t m1_frame = calc_dshot_frame(pwms[0], armedFly);
+            uint16_t m2_frame = calc_dshot_frame(pwms[1], armedFly);
+            uint16_t m3_frame = calc_dshot_frame(pwms[2], armedFly);
+            uint16_t m4_frame = calc_dshot_frame(pwms[3], armedFly);
 
             noInterrupts();
 
