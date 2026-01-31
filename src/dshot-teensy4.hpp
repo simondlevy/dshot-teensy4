@@ -36,10 +36,6 @@
  * Tunable:
  */
 
-// fast pin access
-#define pin_up(pin) (*portSetRegister(pin) = digitalPinToBitMask(pin))
-#define pin_down(pin) (*portClearRegister(pin) = digitalPinToBitMask(pin))
-
 
 class DshotTeensy4 {
 
@@ -114,7 +110,7 @@ class DshotTeensy4 {
 
                 // start high pulses
                 for (auto pin : _pins) {
-                    pin_up(pin);
+                    *portSetRegister(pin) = digitalPinToBitMask(pin);
                 }
 
                 // adjust the duration of the 0 high pulse ( short pulse ) to
@@ -137,7 +133,9 @@ class DshotTeensy4 {
 
                 // end signal for 0 high pulses
                 for (uint8_t k=0; k<_pins.size(); ++k) {
-                    if (!_is1s[k]) { pin_down(_pins[k]); };
+                    if (!_is1s[k]) {
+                        pin_down(_pins[k]);
+                    };
                 }
 
                 // busy wait until the 1 high pulses are complete
@@ -145,7 +143,9 @@ class DshotTeensy4 {
 
                 // end signal for 1 high pulses
                 for (uint8_t k=0; k<_pins.size(); ++k) {
-                    if (_is1s[k]) { pin_down(_pins[k]); };
+                    if (_is1s[k]) {
+                        pin_down(_pins[k]);
+                    };
                 }
 
                 bit_start_cycle += stepsforbit; // Advance to the start time of the next bit
@@ -167,6 +167,11 @@ class DshotTeensy4 {
         std::vector<uint16_t> _is1s;
 
         uint16_t _idle_throttle;
+
+        static void pin_down(const uint8_t pin)
+        {
+            *portClearRegister(pin) = digitalPinToBitMask(pin);
+        }
 
         static float clamp(float val, float minv, float maxv) 
         {
