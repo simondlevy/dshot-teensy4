@@ -53,6 +53,7 @@ class DshotTeensy4 {
         {
             for (auto pin : pins) {
                 _pins.push_back(pin);
+                pinMode(pin, OUTPUT);
             }
          }
 

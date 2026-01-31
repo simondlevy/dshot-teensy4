@@ -1,14 +1,6 @@
-SKETCH = Test
+SKETCH = $(shell basename "`pwd`")
 
-ifeq ($(OS),Windows_NT)
-PORT = COM3
-TERM = plink -serial
-PYTHON = python
-else
 PORT = /dev/ttyACM0
-TERM = miniterm.py
-PYTHON = python3
-endif
 
 FQBN = teensy:avr:teensy40
 
@@ -22,4 +14,7 @@ flash:
 
 listen:
 	miniterm.py $(PORT) --exit-char 3
+
+edit:
+	vim $(SKETCH).ino
 
