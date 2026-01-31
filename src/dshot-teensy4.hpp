@@ -30,22 +30,25 @@
 #define ONESHOT_MIN_THROTTLE 125
 #define ONESHOT_MAX_THROTTLE 250
 
-/*
- * Can be configured at DSHOT 300, 600 speeds
- * Defaults to DSHOT300.
- */
 class DshotTeensy4 {
 
     public:
+
+        typedef enum {
+
+            DSHOT_300,
+            DSHOT_600
+
+        } dshot_type_e;
 
         /*
          * idle_throttle needs to be high enough to avoid desyncs, low enough
          * to avoid liftoff. Somewhere between 50 and 400 - offset: adjustment
          * to DSHOT short pulse in case ESC rejects frames.
          */
-
         DshotTeensy4(
                 const std::vector<uint8_t> pins,
+                const dshot_type_e dshot_type=DSHOT_600,
                 const uint16_t idle_throttle=100
                 )
         {
@@ -58,6 +61,14 @@ class DshotTeensy4 {
             }
 
             _idle_throttle = idle_throttle;
+
+            const float div = dshot_type == DSHOT_600 ? 2 : 1;
+
+             // Relies on teensy4.0 ARM_DWT_CYCCNT CPU cycle counter.
+             // 1 cycle ≈ 1.67 nanoseconds
+            _stepsfor0high = (F_CPU_ACTUAL * 1.25 / div) / 1'000'000;
+            _stepsfor1high = (F_CPU_ACTUAL * 2.50 / div) / 1'000'000;
+            _stepsforbit = (F_CPU_ACTUAL * 3.33 / div) / 1'000'000;
         }
 
         void arm() {
@@ -78,31 +89,12 @@ class DshotTeensy4 {
                 cycle_ctr_enabled = true; // set flag so it won’t run again
             }
 
-            // DSHOT timers
-            // In DSHOT the high time for a 1 is always double that of a 0.
-            uint32_t cpuHz = F_CPU_ACTUAL;
-
-            // DSHOT300 - should be sufficient for dRehmFlight
-            //uint32_t stepsfor0high = (cpuHz * 1.25f) / 1'000'000;
-            //uint32_t stepsfor1high = (cpuHz * 2.50f) / 1'000'000;
-            //uint32_t stepsforbit = (cpuHz * 3.33f) / 1'000'000;
-            //uint32_t offset = 80; // tuned adjustment for minimizing out-of-frame errors
-            // depending on ESC, range is somewhere between 0 and 160
-
-            // DSHOT600 - faster, but less robust.
-            uint32_t stepsfor0high = (cpuHz * 0.625f) / 1'000'000;
-            uint32_t stepsfor1high = (cpuHz * 1.25f) / 1'000'000;
-            uint32_t stepsforbit = (cpuHz * 1.67) / 1'000'000;
             //uint32_t offset = 40; // tuned adjustment for minimizing out-of-frame errors
             // depending on ESC, range is somewhere between 20 and 80
 
-            /*
-             * relies on teensy4.0 ARM_DWT_CYCCNT CPU cycle counter. 1 cycle ≈ 1.67 nanoseconds
-             */
-
             // Prepare DShot frames for all motors.
             for (uint8_t k=0; k<_pins.size(); ++k) {
-                _frames[k] = calc_dshot_frame(pwms[k], armed);
+                _frames[k] = calc_dshot_frame(pwms[k], armed, _idle_throttle);
             }
 
             noInterrupts();
@@ -125,9 +117,9 @@ class DshotTeensy4 {
                 // rejection
                 uint32_t offset = ARM_DWT_CYCCNT - bit_start_cycle;
 
-                uint32_t timeout0high = bit_start_cycle + stepsfor0high; // start + 375
-                uint32_t timeout1high = bit_start_cycle + stepsfor1high; // start + 750
-                uint32_t timeoutbit = bit_start_cycle + stepsforbit; // start + 1002
+                uint32_t timeout0high = bit_start_cycle + _stepsfor0high; // start + 375
+                uint32_t timeout1high = bit_start_cycle + _stepsfor1high; // start + 750
+                uint32_t timeoutbit = bit_start_cycle + _stepsforbit; // start + 1002
 
                 // is 'i'th bit 0 or 1
                 for (uint8_t k=0; k<_pins.size(); ++k) {
@@ -154,7 +146,7 @@ class DshotTeensy4 {
                     };
                 }
 
-                bit_start_cycle += stepsforbit; // Advance to the start time of the next bit
+                bit_start_cycle += _stepsforbit; // Advance to the start time of the next bit
 
                 // busy wait until the 1 high pulses are complete ( 1.67
                 // microseconds / 1002 cycles )
@@ -176,6 +168,10 @@ class DshotTeensy4 {
 
         uint16_t _idle_throttle;
 
+        uint32_t _stepsfor0high; 
+        uint32_t _stepsfor1high;
+        uint32_t _stepsforbit; 
+
         static void pin_down(const uint8_t pin)
         {
             *portClearRegister(pin) = digitalPinToBitMask(pin);
@@ -195,14 +191,15 @@ class DshotTeensy4 {
                     (out_max - out_min)) / (in_max - in_min);
         }
 
-        uint16_t calc_dshot_frame(const float in, const bool armed)
+        static uint16_t calc_dshot_frame(
+                const float in, const bool armed, const uint16_t idle)
         {
             const uint16_t throttle = !armed ? 0 :
                 round(map_range(
                             in,
                             ONESHOT_MIN_THROTTLE,
                             ONESHOT_MAX_THROTTLE,
-                            DSHOT_MIN_THROTTLE + _idle_throttle,
+                            DSHOT_MIN_THROTTLE + idle,
                             DSHOT_MAX_THROTTLE));
 
             const uint16_t frame = (throttle << 1) | 0; // [11 bits throttle][1 bit telemetry]
