@@ -61,11 +61,7 @@ class DshotTeensy4 {
                 const int m1_command_PWM,
                 const int m2_command_PWM,
                 const int m3_command_PWM,
-                const int m4_command_PWM,
-                const uint8_t m1Pin,
-                const uint8_t m2Pin,
-                const uint8_t m3Pin,
-                const uint8_t m4Pin
+                const int m4_command_PWM
                  )
         {
             static bool cycle_ctr_enabled = false;
@@ -114,10 +110,10 @@ class DshotTeensy4 {
             for (int i = 15; i >= 0; --i) {
 
                 // start high pulses
-                pin_up(m1Pin);
-                pin_up(m2Pin);
-                pin_up(m3Pin);
-                pin_up(m4Pin);
+                pin_up(_pins[0]);
+                pin_up(_pins[1]);
+                pin_up(_pins[2]);
+                pin_up(_pins[3]);
 
                 // adjust the duration of the 0 high pulse ( short pulse ) to
                 // exclude the time it took to set pins high if included, under
@@ -139,19 +135,19 @@ class DshotTeensy4 {
                 while (ARM_DWT_CYCCNT < (timeout0high - offset)) {;} 
 
                 // end signal for 0 high pulses
-                if (!m1_is1) { pin_down(m1Pin); };
-                if (!m2_is1) { pin_down(m2Pin); };
-                if (!m3_is1) { pin_down(m3Pin); };
-                if (!m4_is1) { pin_down(m4Pin); };
+                if (!m1_is1) { pin_down(_pins[0]); };
+                if (!m2_is1) { pin_down(_pins[1]); };
+                if (!m3_is1) { pin_down(_pins[2]); };
+                if (!m4_is1) { pin_down(_pins[3]); };
 
                 // busy wait until the 1 high pulses are complete
                 while (ARM_DWT_CYCCNT < timeout1high) {;} 
 
                 // end signal for 1 high pulses
-                if (m1_is1) { pin_down(m1Pin); };
-                if (m2_is1) { pin_down(m2Pin); };
-                if (m3_is1) { pin_down(m3Pin); };
-                if (m4_is1) { pin_down(m4Pin); };
+                if (m1_is1) { pin_down(_pins[0]); };
+                if (m2_is1) { pin_down(_pins[1]); };
+                if (m3_is1) { pin_down(_pins[2]); };
+                if (m4_is1) { pin_down(_pins[3]); };
 
                 bit_start_cycle += stepsforbit; // Advance to the start time of the next bit
 
