@@ -32,11 +32,8 @@
 
 /*
  * Can be configured at DSHOT 300, 600 speeds
- * Defaults to DSHOT300 - sufficient for the default 2k loop speed
- * Tunable:
+ * Defaults to DSHOT300.
  */
-
-
 class DshotTeensy4 {
 
     public:
@@ -56,10 +53,19 @@ class DshotTeensy4 {
                 _pins.push_back(pin);
                 _frames.push_back(0);
                 _is1s.push_back(0);
+                _armingPwms.push_back(125);
                 pinMode(pin, OUTPUT);
             }
 
             _idle_throttle = idle_throttle;
+        }
+
+        void arm() {
+
+            for (uint8_t i=0; i <=50; i++) {
+                run(false, _armingPwms.data());
+                delay(2);
+            }
         }
 
         void run(const bool armedFly, const float * pwms)
@@ -166,6 +172,8 @@ class DshotTeensy4 {
 
         std::vector<uint16_t> _is1s;
 
+        std::vector<float> _armingPwms;
+
         uint16_t _idle_throttle;
 
         static void pin_down(const uint8_t pin)
@@ -189,7 +197,6 @@ class DshotTeensy4 {
 
         uint16_t calc_dshot_frame(float in, const bool armedFly)
         {
-
             uint16_t throttle = 0;
             uint16_t frame = 0;
             uint8_t crc = 0;
