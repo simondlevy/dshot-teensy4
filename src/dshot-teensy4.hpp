@@ -184,23 +184,16 @@ class DshotTeensy4 {
         }
 
         static float map_range(const float in,
-                const float in_min, const float in_max,
                 const float out_min, const float out_max)
         {
-            return out_min + ((clamp(in, in_min, in_max) - in_min) *
-                    (out_max - out_min)) / (in_max - in_min);
+            return out_min + ((clamp(in, 0, 1)) * (out_max - out_min));
         }
 
         static uint16_t calc_dshot_frame(
                 const float in, const bool armed, const uint16_t idle)
         {
             const uint16_t throttle = !armed ? 0 :
-                round(map_range(
-                            in,
-                            0,
-                            1,
-                            48 + idle,
-                            2047));
+                round(map_range(in, 48 + idle, 2047));
 
             const uint16_t frame = (throttle << 1) | 0; // [11 bits throttle][1 bit telemetry]
 
