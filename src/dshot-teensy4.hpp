@@ -54,6 +54,7 @@ class DshotTeensy4 {
             for (auto pin : pins) {
                 _pins.push_back(pin);
                 _frames.push_back(0);
+                _is1s.push_back(0);
                 pinMode(pin, OUTPUT);
             }
          }
@@ -120,28 +121,25 @@ class DshotTeensy4 {
                 uint32_t timeoutbit = bit_start_cycle + stepsforbit; // start + 1002
 
                 // is 'i'th bit 0 or 1
-                uint16_t m1_is1 = ((_frames[0] >> i) & 1);
-                uint16_t m2_is1 = ((_frames[1] >> i) & 1);
-                uint16_t m3_is1 = ((_frames[2] >> i) & 1);
-                uint16_t m4_is1 = ((_frames[3] >> i) & 1);
+                for (uint8_t k=0; k<_pins.size(); ++k) {
+                    _is1s[k] = ((_frames[k] >> i) & 1);
+                }
 
                 // busy wait until the 0 high pulses are complete
                 while (ARM_DWT_CYCCNT < (timeout0high - offset)) {;} 
 
                 // end signal for 0 high pulses
-                if (!m1_is1) { pin_down(_pins[0]); };
-                if (!m2_is1) { pin_down(_pins[1]); };
-                if (!m3_is1) { pin_down(_pins[2]); };
-                if (!m4_is1) { pin_down(_pins[3]); };
+                for (uint8_t k=0; k<_pins.size(); ++k) {
+                    if (!_is1s[k]) { pin_down(_pins[k]); };
+                }
 
                 // busy wait until the 1 high pulses are complete
                 while (ARM_DWT_CYCCNT < timeout1high) {;} 
 
                 // end signal for 1 high pulses
-                if (m1_is1) { pin_down(_pins[0]); };
-                if (m2_is1) { pin_down(_pins[1]); };
-                if (m3_is1) { pin_down(_pins[2]); };
-                if (m4_is1) { pin_down(_pins[3]); };
+                for (uint8_t k=0; k<_pins.size(); ++k) {
+                    if (_is1s[k]) { pin_down(_pins[k]); };
+                }
 
                 bit_start_cycle += stepsforbit; // Advance to the start time of the next bit
 
@@ -158,6 +156,8 @@ class DshotTeensy4 {
         std::vector<uint8_t> _pins;
 
         std::vector<uint16_t> _frames;
+
+        std::vector<uint16_t> _is1s;
 
         static float clamp(float val, float minv, float maxv) 
         {
