@@ -18,6 +18,12 @@
    along with this program. If not, see <http:--www.gnu.org/licenses/>.
  */
 
+#pragma once
+
+#include <Arduino.h>
+
+#include <vector>
+
 // throttle ranges
 #define DSHOT_MIN_THROTTLE 48
 #define DSHOT_MAX_THROTTLE 2047
@@ -43,7 +49,14 @@ class DshotTeensy4 {
 
     public:
 
-        static void commandMotors(
+        DshotTeensy4(const std::vector<uint8_t> pins)
+        {
+            for (auto pin : pins) {
+                _pins.push_back(pin);
+            }
+         }
+
+        void run(
                 const bool armedFly,
                 const int m1_command_PWM,
                 const int m2_command_PWM,
@@ -151,6 +164,8 @@ class DshotTeensy4 {
         }
 
     private:
+
+        std::vector<uint8_t> _pins;
 
         static float clamp(float val, float minv, float maxv) 
         {
