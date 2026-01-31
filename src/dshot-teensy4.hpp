@@ -68,7 +68,7 @@ class DshotTeensy4 {
             }
         }
 
-        void run(const bool armedFly, const float * pwms)
+        void run(const bool armed, const float * pwms)
         {
             static bool cycle_ctr_enabled = false;
 
@@ -102,7 +102,7 @@ class DshotTeensy4 {
 
             // Prepare DShot frames for all motors.
             for (uint8_t k=0; k<_pins.size(); ++k) {
-                _frames[k] = calc_dshot_frame(pwms[k], armedFly);
+                _frames[k] = calc_dshot_frame(pwms[k], armed);
             }
 
             noInterrupts();
@@ -181,39 +181,33 @@ class DshotTeensy4 {
             *portClearRegister(pin) = digitalPinToBitMask(pin);
         }
 
-        static float clamp(float val, float minv, float maxv) 
+        static float clamp(
+                const float val, const float minv, const float maxv) 
         {
-            if (val < minv) return minv;
-            if (val > maxv) return maxv;
-            return val;
+            return val < minv ? minv : val > maxv ? maxv : val;
         }
 
-        static float map_range(float in, float in_min, float in_max,
-                float out_min, float out_max)
+        static float map_range(const float in,
+                const float in_min, const float in_max,
+                const float out_min, const float out_max)
         {
             return out_min + ((clamp(in, in_min, in_max) - in_min) *
                     (out_max - out_min)) / (in_max - in_min);
         }
 
-        uint16_t calc_dshot_frame(float in, const bool armedFly)
+        uint16_t calc_dshot_frame(const float in, const bool armed)
         {
-            uint16_t throttle = 0;
-            uint16_t frame = 0;
-            uint8_t crc = 0;
-
-            if (!armedFly) {
-                throttle = 0; // disarm.
-            } else {
-                throttle = round(map_range(
+            const uint16_t throttle = !armed ? 0 :
+                round(map_range(
                             in,
                             ONESHOT_MIN_THROTTLE,
                             ONESHOT_MAX_THROTTLE,
                             DSHOT_MIN_THROTTLE + _idle_throttle,
                             DSHOT_MAX_THROTTLE));
-            }
 
-            frame = (throttle << 1) | 0; // [11 bits throttle][1 bit telemetry]
-            crc = (frame ^ (frame >> 4) ^ (frame >> 8)) & 0x0F; // [4 bits CRC]
+            const uint16_t frame = (throttle << 1) | 0; // [11 bits throttle][1 bit telemetry]
+
+            const uint8_t crc = (frame ^ (frame >> 4) ^ (frame >> 8)) & 0x0F; // [4 bits CRC]
 
             return (frame << 4) | crc; // [16 bits dshot frame]
         }
