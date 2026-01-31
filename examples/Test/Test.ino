@@ -1,17 +1,8 @@
-#include <dshot-teensy4.hpp>
+#include <dshot-teensy4.hpp>  
 
-// Motors
 static DshotTeensy4 _motors = DshotTeensy4({6, 5, 4, 3});
 
-static float _motor_pwms[4];
-
-static void armMotors() {
-
-    for (int i = 0; i <= 50; i++) {
-        _motors.run(armedFly, _motor_pwms);
-         delay(2);
-    }
-}
+static uint32_t current_time, prev_time;
 
 static void loopRate(int freq) {
 
@@ -23,21 +14,24 @@ static void loopRate(int freq) {
     }
 }
 
+
 void setup()
 {
     Serial.begin(500000); 
 
-    _motor_pwms[0] = 125; 
-    _motor_pwms[1] = 125;
-    _motor_pwms[2] = 125;
-    _motor_pwms[3] = 125;
+    delay(500);
 
-    armMotors(); 
+    _motors.arm(); 
 }
 
 void loop()
 {
-    _motors.run(armedFly, _motor_pwms);
+    prev_time = current_time;      
+    current_time = micros();      
+
+    float motorvals[4] = {};
+
+    _motors.run(false, motorvals);
 
     loopRate(2000); 
 }
