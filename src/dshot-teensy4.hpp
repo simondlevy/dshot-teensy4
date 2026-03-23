@@ -71,7 +71,7 @@ class DshotTeensy4 {
             _stepsforbit = (F_CPU_ACTUAL * 3.33 / div) / 1'000'000;
         }
 
-        void arm() {
+        void begin() {
 
             for (uint8_t i=0; i <=50; i++) {
                 run(false, _armingPwms.data());

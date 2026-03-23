@@ -19,7 +19,7 @@
 
 #include <dshot-teensy4.hpp>  
 
-static DshotTeensy4 _motors = DshotTeensy4({6, 5, 4, 3});
+static DshotTeensy4 _motors = DshotTeensy4({2, 3, 4, 5});
 
 static float MAX = 0.5;
 static float INC = 1e-5;
@@ -80,7 +80,7 @@ void setup()
 
     dir = +1;
 
-    _motors.arm(); 
+    _motors.begin(); 
 }
 
 void loop()
