@@ -68,12 +68,12 @@ class DshotTeensy4 {
         void begin() {
 
             for (uint8_t i=0; i <=50; i++) {
-                run(false, _armingPwms.data());
+                run(false, _armingPwms);
                 delay(2);
             }
         }
 
-        void run(const bool armed, const float * pwms)
+        void run(const bool armed, const std::vector<float> pwms)
         {
             static bool cycle_ctr_enabled = false;
 
@@ -83,8 +83,9 @@ class DshotTeensy4 {
                 cycle_ctr_enabled = true; // set flag so it won’t run again
             }
 
-            //uint32_t offset = 40; // tuned adjustment for minimizing out-of-frame errors
-            // depending on ESC, range is somewhere between 20 and 80
+            //uint32_t offset = 40; tuned adjustment for minimizing
+            //out-of-frame errors depending on ESC, range is somewhere between
+            //20 and 80
 
             // Prepare DShot frames for all motors.
             for (uint8_t k=0; k<_pins.size(); ++k) {
@@ -97,7 +98,8 @@ class DshotTeensy4 {
 
             // In DSHOT the high time for a 1 is always double that of a 0.
 
-            // Iterate through each of the 16 bits in the DShot frame, from MSB to LSB.
+            // Iterate through each of the 16 bits in the DShot frame, from MSB
+            // to LSB.
             for (int i = 15; i >= 0; --i) {
 
                 // start high pulses
@@ -111,9 +113,14 @@ class DshotTeensy4 {
                 // rejection
                 uint32_t offset = ARM_DWT_CYCCNT - bit_start_cycle;
 
-                uint32_t timeout0high = bit_start_cycle + _stepsfor0high; // start + 375
-                uint32_t timeout1high = bit_start_cycle + _stepsfor1high; // start + 750
-                uint32_t timeoutbit = bit_start_cycle + _stepsforbit; // start + 1002
+                // start + 375
+                uint32_t timeout0high = bit_start_cycle + _stepsfor0high; 
+
+                // start + 750
+                uint32_t timeout1high = bit_start_cycle + _stepsfor1high; 
+
+                // start + 1002
+                uint32_t timeoutbit = bit_start_cycle + _stepsforbit; 
 
                 // is 'i'th bit 0 or 1
                 for (uint8_t k=0; k<_pins.size(); ++k) {
@@ -140,7 +147,8 @@ class DshotTeensy4 {
                     };
                 }
 
-                bit_start_cycle += _stepsforbit; // Advance to the start time of the next bit
+                // Advance to the start time of the next bit
+                bit_start_cycle += _stepsforbit; 
 
                 // busy wait until the 1 high pulses are complete ( 1.67
                 // microseconds / 1002 cycles )
@@ -189,11 +197,14 @@ class DshotTeensy4 {
             const uint16_t throttle = !armed ? 0 :
                 round(map_range(in, 48 + idle, 2047));
 
-            const uint16_t frame = (throttle << 1) | 0; // [11 bits throttle][1 bit telemetry]
+            // [11 bits throttle][1 bit telemetry]
+            const uint16_t frame = (throttle << 1) | 0; 
 
-            const uint8_t crc = (frame ^ (frame >> 4) ^ (frame >> 8)) & 0x0F; // [4 bits CRC]
+            // [4 bits CRC]
+            const uint8_t crc = (frame ^ (frame >> 4) ^ (frame >> 8)) & 0x0F; 
 
-            return (frame << 4) | crc; // [16 bits dshot frame]
+            // [16 bits dshot frame]
+            return (frame << 4) | crc; 
         }
 
 };

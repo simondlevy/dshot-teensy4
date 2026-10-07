@@ -19,12 +19,7 @@
 
 #include <dshot-teensy4.hpp>  
 
-<<<<<<< HEAD
 static DshotTeensy4 _motors = DshotTeensy4({3});
-=======
-// static DshotTeensy4 _motors = DshotTeensy4({2, 3, 4, 5});
-static DshotTeensy4 _motors = DshotTeensy4({5});
->>>>>>> c2184cafda6eb454cff72a11f841f56a3e496ed1
 
 static float MAX = 0.5;
 static float INC = 1e-5;
@@ -90,7 +85,7 @@ void loop()
 {
     const float inp = inputGet();
 
-    float motorvals[4] = {inp, inp, inp, inp};
+    std::vector<float> motorvals = {inp, inp, inp, inp};
 
     _motors.run(inp > 0, motorvals);
 
