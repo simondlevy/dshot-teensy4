@@ -19,7 +19,7 @@
 
 #include <dshot-teensy4.hpp>  
 
-static DshotTeensy4 _motors = DshotTeensy4({2, 3, 4, 5});
+static DshotTeensy4 _motors = DshotTeensy4({3});
 
 static float MAX = 0.5;
 static float INC = 1e-5;
@@ -74,8 +74,6 @@ static float inputGet()
 
 void setup()
 {
-    Serial.begin(500000); 
-
     delay(500);
 
     dir = +1;
