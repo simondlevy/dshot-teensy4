@@ -24,12 +24,6 @@
 
 #include <vector>
 
-// throttle ranges
-#define DSHOT_MIN_THROTTLE 48
-#define DSHOT_MAX_THROTTLE 2047
-#define ONESHOT_MIN_THROTTLE 125
-#define ONESHOT_MAX_THROTTLE 250
-
 class DshotTeensy4 {
 
     public:
