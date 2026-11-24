@@ -73,7 +73,10 @@ class DshotTeensy4 {
             }
         }
 
-        void run(const bool armed, const std::vector<float> pwms)
+        /**
+          * values in [0,1]
+          */
+        void run(const bool armed, const std::vector<float> vals)
         {
             static bool cycle_ctr_enabled = false;
 
@@ -89,7 +92,7 @@ class DshotTeensy4 {
 
             // Prepare DShot frames for all motors.
             for (uint8_t k=0; k<_pins.size(); ++k) {
-                _frames[k] = calc_dshot_frame(pwms[k], armed, _idle_throttle);
+                _frames[k] = calc_dshot_frame(vals[k], armed, _idle_throttle);
             }
 
             noInterrupts();

@@ -19,7 +19,9 @@
 
 #include <dshot-teensy4.hpp>  
 
-static DshotTeensy4 _motors = DshotTeensy4({3});
+
+static DshotTeensy4 _motors = DshotTeensy4({4, 5, 2, 3});
+//static DshotTeensy4 _motors = DshotTeensy4({23, 0, 8, 7});
 
 static float MAX = 0.5;
 static float INC = 1e-5;
